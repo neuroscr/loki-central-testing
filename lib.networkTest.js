@@ -48,7 +48,7 @@ function testUpload(cb) {
         }, slice)
       break
       case 'stop':
-        console.log('stopping request after', count, 's and', ticks, 'ticks, attempted to send', formatBytes(blocksPerTick * ticks * 65535), 'which is', formatBytes(blocksPerTick * ticks * 65535 / 60)+'/s')
+        console.log('stopping request after', count, 's and', ticks, 'ticks, attempted to send', formatBytes(blocksPerTick * ticks * 65535), 'which is', formatBytes(blocksPerTick * ticks * 65535 / count)+'/s')
         stopTest()
         client.reconnect = false
         //client.disconncet()
