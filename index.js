@@ -1,5 +1,10 @@
 const netWrap = require('./lets_tcp')
 
+// FIXME: limit per incoming IP
+// FIXME: cool down period between test
+// FIXME: remote port test
+
+
 netWrap.serveTCP(3000, function(client) {
   client.last = Date.now()
   client.send('ip ' + client.socket.address().address)
@@ -24,6 +29,9 @@ netWrap.serveTCP(3000, function(client) {
       case 'data':
         // just count the bytes
         client.bytes += str.length
+      break
+      case 'port':
+        // try to connect to this port
       break
     }
   }
