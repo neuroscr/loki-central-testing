@@ -242,7 +242,7 @@ module.exports={
       })
       */
       tcpClient.on('close', function() {
-        console.log('tcpClient close event')
+        //console.log('tcpClient close event')
         // only notify on first disconnect, not retries
         if (client.connected) {
           //console.log('reconnect failed');
@@ -266,7 +266,9 @@ module.exports={
             setTimeout(tryAgain, client.retry);
           }
         }
-        setTimeout(tryAgain, client.retry);
+        if (client.reconnect) {
+          setTimeout(tryAgain, client.retry);
+        }
       });
       if (callback) {
         callback(client);
