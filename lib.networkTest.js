@@ -1,7 +1,7 @@
 const slice = 10
 const blocksPerTick = 100
 
-function testUpload(cb) {
+function testUpload(host, port, cb) {
   const netWrap = require('./lets_tcp')
   var timer = null
   var uiTimer = null
@@ -15,7 +15,7 @@ function testUpload(cb) {
   }
 
   netWrap.recv = function(pkt, client) {
-    console.log('got', pkt, 'from', client.socket.address().address)
+    //console.log('got', pkt, 'from', client.socket.address().address)
     var parts = pkt.split(/ /)
     var w0    = parts[0]
     switch(w0) {
@@ -63,11 +63,11 @@ function testUpload(cb) {
   }
 
   netWrap.disconnect = function(client) {
-    console.log('disconnected, stopping any pending tests')
+    //console.log('disconnected, stopping any pending tests')
     stopTest()
   }
 
-  netWrap.connectTCP('127.0.0.1', 3000, function(client) {
+  netWrap.connectTCP(host, port, function(client) {
     // don't reconnect on disconnect (so we can actually force a disconnect when done)
     client.reconnect = false
   })
