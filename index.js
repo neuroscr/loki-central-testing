@@ -32,6 +32,17 @@ netWrap.serveTCP(3000, function(client) {
       break
       case 'port':
         // try to connect to this port
+        // sanitize user input
+        var port = parseInt(parts[1])
+        if (!port) {
+          client.send('error bad port ' + parts[1])
+          console.log('bad port', parts[1])
+          return
+        }
+        netWrap.connectTCP(host, port, function(client) {
+          // FIXME failure
+          // vs what? just send ip?
+        })
       break
     }
   }
