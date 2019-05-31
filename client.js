@@ -7,6 +7,7 @@ function testUpload(cb) {
   var uiTimer = null
   var ticks = 0
   var count = 0
+  var ip = null
 
   function stopTest() {
     if (timer) clearInterval(timer)
@@ -20,6 +21,7 @@ function testUpload(cb) {
     switch(w0) {
       case 'ip':
         console.log('my public ip is maybe', parts[1])
+        ip = parts[1]
         // start test
         console.log('starting test')
         client.send('start')
@@ -52,7 +54,10 @@ function testUpload(cb) {
         //client.disconncet()
         client.destroy() // cause a disconnect
         client.socket.destroy()
-        cb(parts[1])
+        cb({
+          ip: ip,
+          uploadBytesPerSec: parts[1],
+        })
       break
     }
   }
@@ -78,6 +83,6 @@ function formatBytes(bytes, decimals = 2) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i]
 }
 
-testUpload(function(bytesPerSec) {
-  console.log('bytes per second:', formatBytes(bytesPerSec))
+testUpload(function(results) {
+  console.log('bytes per second:', formatBytes(results.uploadBytesPerSec), 'from', results.ip)
 })
