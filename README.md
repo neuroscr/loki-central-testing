@@ -5,7 +5,7 @@ Server for helping testing remote node for network set up
 
 ## start the server
 
-`node servers.js`
+`node index.js`
 
 ## start a client
 
