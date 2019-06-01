@@ -158,6 +158,12 @@ module.exports={
       }
     });
     var client=clients[handle];
+    tcpClient.on('error', function(err) {
+      //console.error('err', err)
+      if (module.exports.errorHandler) {
+        module.exports.errorHandler(err)
+      }
+    })
     tcpClient.connect(port, host, function() {
       client.connected=true;
       // handle reconnects
