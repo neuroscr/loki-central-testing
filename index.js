@@ -2,14 +2,13 @@ const netWrap = require('./lets_tcp')
 
 // FIXME: limit per incoming IP
 // FIXME: cool down period between test
-// FIXME: remote port test
 
-
+var portLock = null
 netWrap.serveTCP(3000, function(client) {
   client.last = Date.now()
   client.send('ip ' + client.socket.address().address)
   client.disconnect=function() {
-    console.log('disconnect')
+    //console.log('disconnect')
   }
   client.recv=function(str) {
     if (!client) {
@@ -39,10 +38,29 @@ netWrap.serveTCP(3000, function(client) {
           console.log('bad port', parts[1])
           return
         }
-        netWrap.connectTCP(host, port, function(client) {
-          // FIXME failure
-          // vs what? just send ip?
-        })
+
+        function tryPort(client, port) {
+          if (portLock !== null) {
+            console.log('having to wait to test', client.socket.address().address, port)
+            setTimeout(1000, function() {
+              tryPort(client, port)
+            })
+            return
+          }
+          // update errorHandler
+          netWrap.errorHandler = function(err) {
+            if (err.code != 'ECONNREFUSED') console.error('tcpClient error', err)
+            client.send('report fail ' + err.code)
+            netWrap.errorHandler = null // release our hold
+            portLock = null
+          }
+          netWrap.connectTCP(client.socket.address().address, port, function(client) {
+            console.log('connect attempt', client)
+            client.send('report good')
+            portLock = null
+          })
+        }
+        tryPort(client, port)
       break
     }
   }
