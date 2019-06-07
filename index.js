@@ -6,7 +6,7 @@ const netWrap = require('./lets_tcp')
 var portLock = null
 netWrap.serveTCP(3000, function(client) {
   client.last = Date.now()
-  client.send('ip ' + client.socket.address().address)
+  client.send('ip ' + client.socket.remoteAddress)
   client.disconnect=function() {
     //console.log('disconnect')
   }
