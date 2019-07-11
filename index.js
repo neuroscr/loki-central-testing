@@ -50,18 +50,28 @@ netWrap.serveTCP(3000, function(client) {
           // update errorHandler
           netWrap.errorHandler = function(err) {
             if (err.code != 'ECONNREFUSED') console.error('tcpClient error', err)
+            console.log('port', client.socket.remoteAddress, ':', open, 'is closed')
             client.send('report fail ' + err.code)
             netWrap.errorHandler = null // release our hold
             portLock = null
           }
           console.log('trying to connect to', client.socket.remoteAddress, port)
-          netWrap.connectTCP(client.socket.remoteAddress, port, function(client) {
-            console.log('connect attempt', client)
+          netWrap.connectTCP(client.socket.remoteAddress, port, function(client2) {
+            // what were you looking for?
+            //console.log('connect attempt', client)
+            console.log('port', client.socket.remoteAddress, ':', open, 'is open')
             client.send('report good')
             portLock = null
+            client2.reconnect = false
+            //client.disconncet()
+            client2.destroy() // cause a disconnect
+            client2.socket.destroy()
           })
         }
         tryPort(client, port)
+      break
+      case 'dc':
+        client.reconnect = false
       break
     }
   }
