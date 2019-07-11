@@ -54,7 +54,8 @@ netWrap.serveTCP(3000, function(client) {
             netWrap.errorHandler = null // release our hold
             portLock = null
           }
-          netWrap.connectTCP(client.socket.address().address, port, function(client) {
+          console.log('trying to connect to', client.socket.remoteAddress, port)
+          netWrap.connectTCP(client.socket.remoteAddress, port, function(client) {
             console.log('connect attempt', client)
             client.send('report good')
             portLock = null
