@@ -3,7 +3,9 @@
  * @author Ryan Tharp
  * @module lets_tcp
  */
-var net = require('net');
+const net = require('net');
+const dgram = require('dgram');
+const VERSION = 0.2
 
 // works for client/server
 // you'd never want the client and server to be the same
@@ -87,8 +89,8 @@ module.exports={
    * @function
    * @param {object} client - client to disconnect
    */
-  disconnect: function(client) {
-    console.log('disconnect stub');
+  disconnect: function(socket, isClient) {
+    console.log(socket.name, 'disconnect stub, client', isClient);
   },
   /**
    * request reconnect for client
@@ -144,7 +146,7 @@ module.exports={
       },
       */
       disconnect: function() {
-        module.exports.disconnect(clients[handle]);
+        module.exports.disconnect(clients[handle], true);
         if (client.reconnect) {
           console.log('sending reconnect');
           // good for partial disconnects
@@ -159,7 +161,7 @@ module.exports={
     });
     var client=clients[handle];
     tcpClient.on('error', function(err) {
-      //console.error('err', err)
+      console.error('client err', err)
       if (module.exports.errorHandler) {
         module.exports.errorHandler(err)
       }
@@ -315,7 +317,7 @@ module.exports={
           // this is sliding, handle slides to the new idx and doesn't perserve the old
           //, 'handle', handle
           if (client.socket.serverClientCounter!=handle) {
-            console.log('lets_tcp::serverTCP - socket.serverClientCounter is ', client.socket.serverClientCounter, 'but is handle', handle, 'for', str);
+            console.log('lets_tcp::serverTCP -', client.name, 'socket.serverClientCounter is ', client.socket.serverClientCounter, 'but is handle', handle, 'for', str);
           }
           module.exports.send(client, str);
           return 0;
@@ -325,10 +327,10 @@ module.exports={
         },
         // disconnect has happened
         disconnect: function() {
-          module.exports.disconnect(client);
+          module.exports.disconnect(client, false);
         },
       }
-      console.log('lets_tcp::serveTCP - serverClientCounter', serverClientCounter);
+      console.log('lets_tcp::serveTCP - ', client.name, ' - serverClientCounter', serverClientCounter);
       socket.serverClientCounter=serverClientCounter;
       // we can't use an array if we want a handle
       server_clients[handle]=client;
@@ -415,11 +417,11 @@ module.exports={
 
       // Remove the client from the list when it leaves
       socket.on('end', function () {
-        console.log(client.name, 'socket end');
+        if (module.exports.debug) console.log(client.name, 'socket end');
         //broadcast(socket.name + " left the chat.\n");
       });
       socket.on('close', function() {
-        console.log(client.name, 'socket close');
+        if (module.exports.debug) console.log(client.name, 'socket close');
         //console.log('socket end', clients.length);
         // we changed server_clients from an array to an object
         /*
@@ -460,6 +462,46 @@ module.exports={
     }
     servers.push(server);
     server.listen(port);
+    return server;
+  },
+  /**
+   * create a UDP server
+   *
+   * @param {string} port - port to listen on
+   * @param {callback} callback - connect handler function
+   * @returns object - server socket
+   */
+  serveUDP: function(port, callback) {
+    const server = dgram.createSocket('udp4');
+    server.on('error', (err) => {
+      console.error('serveUDP err', err)
+      if (server.errorHandler) {
+        server.errorHandler(err)
+      } else {
+        console.error('SOCKET ERROR:', err)
+        if (module.exports.debug) console.log(`server error:\n${err.stack}`);
+        //server.close();
+      }
+    });
+
+    server.on('message', (msg, rinfo) => {
+      if (module.exports.debug) console.log(`UDPserver got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+      callback(msg, rinfo);
+    });
+
+    server.on('listening', () => {
+      const address = server.address();
+      if (module.exports.debug) console.log(`server listening ${address.address}:${address.port}`);
+    });
+    server.letsClose=function(cb) {
+      if (module.exports.debug) console.debug('closing server UDP', port, 'connections', clients.length);
+      //console.debug('server', port, 'clients destroyed');
+      server.close(function() {
+        //console.debug('server port', port, 'closed');
+        if (cb) cb();
+      });
+    }
+    server.bind(port);
     return server;
   }
 }
